@@ -1,10 +1,10 @@
 #include <IRremote.h>
 
-//Pinbelegung
+//Pin Layout
 const int RECV_PIN = 11; // Pin to which IR receiver is connected
 const int relaisPin = 9;
 
-//globale Variablen
+//global
 String readCode = "";
 
 IRrecv irrecv(RECV_PIN);
@@ -29,11 +29,11 @@ void loop()
     Serial.println(irrecv.decodedIRData.decodedRawData, HEX); // Print the received code in hexadecimal format
     readCode=(irrecv.decodedIRData.decodedRawData);
     irrecv.decodedIRData.decodedRawData = 0;
-    delay(1000);
+    delay(1000); // used to eliminate multiple button pushes, might need to adjust if button needs to be held.
   }
   if (readCode!="")
   {
-    Serial.println("Code gelesen:" + readCode);  
+    Serial.println("Code read:" + readCode);  
     //readCode = "";
     analyseCode(readCode);
   }  
@@ -50,14 +50,14 @@ irrecv.resume(); // Receive the next code
 void analyseCode(String Code)
 {
     
-  if (strcmp(Code.c_str(),"2473330439") == 0)
+  if (strcmp(Code.c_str(),"2473330439") == 0) // green button
   {
     Serial.println("turnonpc");
       turnOnPc();
   }
 }
 
-void turnOnPc()
+void turnOnPc() // Function to start by button push
 {
   digitalWrite(relaisPin, HIGH);
     delay(500);
