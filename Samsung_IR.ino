@@ -1,14 +1,14 @@
 #include <IRremote.h>
 
 //Pin Layout
-const int RECV_PIN = 11; // Pin to which IR receiver is connected
-const int relaisPin = 9;
+int RECV_PIN = A2; // Pin to which IR receiver is connected
+int SEND_PIN = A3;
+int relaisPin = 9;
 
 //global
 String readCode = "";
-
 IRrecv irrecv(RECV_PIN);
-
+IRSender irsend(SEND_PIN)
 decode_results results;
 
 void setup()
@@ -26,15 +26,13 @@ void loop()
  
   if (irrecv.decodedIRData.decodedRawData !=0)
   {
-    Serial.println(irrecv.decodedIRData.decodedRawData, HEX); // Print the received code in hexadecimal format
+    //Serial.println(irrecv.decodedIRData.decodedRawData, HEX); // Print the received code in hexadecimal format
     readCode=(irrecv.decodedIRData.decodedRawData);
     irrecv.decodedIRData.decodedRawData = 0;
     delay(1000); // used to eliminate multiple button pushes, might need to adjust if button needs to be held.
   }
   if (readCode!="")
   {
-    Serial.println("Code read:" + readCode);  
-    //readCode = "";
     analyseCode(readCode);
   }  
 
@@ -47,19 +45,40 @@ irrecv.resume(); // Receive the next code
 
 
 
-void analyseCode(String Code)
+void analyseCode(String code)
 {
-    
-  if (strcmp(Code.c_str(),"2473330439") == 0) // green button
-  {
-    Serial.println("turnonpc");
-      turnOnPc();
-  }
+  if (code=="2473330439")
+    { //red button
+        Serial.println("turnonpc");
+        turnOnPc();
+    }
+  else if(code =="3910534919") // blue button
+    {
+      sendCode("4244768519") //power button
+    }
+    else
+    {
+    printBlankCode(code);
+    }
 }
+
+void sendCode(string codeToSend)
+{
+  irsend.sendNEC(codeToSend,32)
+}
+
 
 void turnOnPc() // Function to start by button push
 {
   digitalWrite(relaisPin, HIGH);
     delay(500);
     digitalWrite(relaisPin, LOW);
+}
+
+void printBlankCode (String Code)
+{
+  Serial.println("no match found: Add this to analyseCode():");
+  Serial.println("else if(code ==\"" + String(Code) + "\"){");
+  Serial.println("//Add your code here");
+  Serial.println("}")
 }
