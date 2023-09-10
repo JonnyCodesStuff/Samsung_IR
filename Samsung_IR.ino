@@ -8,7 +8,7 @@ int relaisPin = 9;
 //global
 String readCode = "";
 IRrecv irrecv(RECV_PIN);
-IRSender irsend(SEND_PIN)
+IRsend irsend(SEND_PIN);
 decode_results results;
 
 void setup()
@@ -54,7 +54,8 @@ void analyseCode(String code)
     }
   else if(code =="3910534919") // blue button
     {
-      sendCode("4244768519") //power button
+      unsigned long NecPowerButton = 0x4244768519;
+      sendCode("NecPowerButton"); //power button
     }
     else
     {
@@ -62,9 +63,9 @@ void analyseCode(String code)
     }
 }
 
-void sendCode(string codeToSend)
+void sendCode(unsigned long codeToSend)
 {
-  irsend.sendNEC(codeToSend,32)
+  irsend.sendNEC(codeToSend, 32);
 }
 
 
@@ -80,5 +81,5 @@ void printBlankCode (String Code)
   Serial.println("no match found: Add this to analyseCode():");
   Serial.println("else if(code ==\"" + String(Code) + "\"){");
   Serial.println("//Add your code here");
-  Serial.println("}")
+  Serial.println("}");
 }
