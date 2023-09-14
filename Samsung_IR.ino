@@ -26,7 +26,16 @@ void loop()
  
   if (irrecv.decodedIRData.decodedRawData !=0)
   {
+    
     //Serial.println(irrecv.decodedIRData.decodedRawData, HEX); // Print the received code in hexadecimal format
+
+    //NEC IR Code
+    if (irrecv.decodedIRData.protocol == SAMSUNG)
+    {
+        printCommand();
+    }
+
+    //using RawData to use for easy matching
     readCode=(irrecv.decodedIRData.decodedRawData);
     irrecv.decodedIRData.decodedRawData = 0;
     delay(1000); // used to eliminate multiple button pushes, might need to adjust if button needs to be held.
@@ -44,7 +53,7 @@ irrecv.resume(); // Receive the next code
 }
 
 
-
+//matches RawCode
 void analyseCode(String code)
 {
   if (code=="2473330439")
@@ -54,8 +63,13 @@ void analyseCode(String code)
     }
   else if(code =="3910534919") // blue button
     {
-      unsigned long NecPowerButton = 0x4244768519;
-      sendCode("NecPowerButton"); //power button
+      IRData CodeToSend; //simulates power button push
+      CodeToSend.protocol = SAMSUNG;
+      CodeToSend.address = 0x707;
+      CodeToSend.command = 0xD ;
+      CodeToSend.numberOfBits = 32;
+      
+      sendCode(CodeToSend);
     }
     else
     {
@@ -63,9 +77,9 @@ void analyseCode(String code)
     }
 }
 
-void sendCode(unsigned long codeToSend)
+void sendCode(IRData data)
 {
-  irsend.sendNEC(codeToSend, 32);
+  irsend.sendSamsung(data.address, data.command, 1);
 }
 
 
@@ -74,6 +88,12 @@ void turnOnPc() // Function to start by button push
   digitalWrite(relaisPin, HIGH);
     delay(500);
     digitalWrite(relaisPin, LOW);
+}
+
+//used to print commands
+void printCommand()
+{
+  irrecv.printIRResultShort(&Serial);
 }
 
 void printBlankCode (String Code)
