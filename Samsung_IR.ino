@@ -10,10 +10,14 @@ IRrecv irrecv(RECV_PIN);
 IRsend irsend(SEND_PIN);
 
 void setup(){
+  pinMode(LED_BUILTIN, OUTPUT); // used to indicate if IR is enabled
+  digitalWrite(LED_BUILTIN, LOW);
   pinMode(relaisPin,OUTPUT);
-  Serial.begin(115200);
   digitalWrite(relaisPin,LOW);
-  irrecv.enableIRIn(); // Start the receiver
+  Serial.begin(115200);  
+  
+  irrecv.enableIRIn(); // Start the IR receiver
+  digitalWrite(LED_BUILTIN, HIGH);  
   Serial.println("is enabled");
 }
 
@@ -91,7 +95,7 @@ void loop(){
     IRData CodeToSend; 
     CodeToSend.protocol = SAMSUNG;
     CodeToSend.address = 0x707;
-    CodeToSend.command = 0xD ;
+    CodeToSend.command = 0x2 ;
     CodeToSend.numberOfBits = 32;
             
     sendCode(CodeToSend);

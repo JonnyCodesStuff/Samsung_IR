@@ -7,7 +7,7 @@ uint8_t relaisPin = D7;
 #include <ESP8266WiFi.h>
 const char* ssid = "WifiSSID"; //add your SSID here
 const char* password = "WifiPW"; //add your Wifi Password here
-const int wifiTryLimit = 50; // Limits wait time for Wifi Seconds. Higher Value = longer boottime on a failed connection
+const int wifiTryLimit = 20; // Limits wait time for Wifi Seconds. Higher Value = longer boottime on a failed connection
 
 // IR Setup
 #include <IRremote.h>
@@ -16,12 +16,15 @@ IRrecv irrecv(RECV_PIN);
 IRsend irsend(SEND_PIN);
 
 void setup(){
+  pinMode(LED_BUILTIN, OUTPUT); // used to indicate if IR is enabled
+  digitalWrite(LED_BUILTIN, HIGH);
   pinMode(relaisPin,OUTPUT);
-  Serial.begin(115200);
-  delay(10);
-  connectToWifi();  
   digitalWrite(relaisPin,LOW);
-  irrecv.enableIRIn(); // Start the receiver
+  Serial.begin(115200);
+
+  connectToWifi();  
+  irrecv.enableIRIn(); // Start the IR receiver
+  digitalWrite(LED_BUILTIN, LOW);  
   Serial.println("is enabled");
 }
 
@@ -38,7 +41,6 @@ void loop(){
       i++;
       delay(1000);
       Serial.print(".");
-      Serial.println("not yet connected");
     }
     if(i==100){
       if (WiFi.status() != WL_CONNECTED){
@@ -127,7 +129,7 @@ void loop(){
       IRData CodeToSend;
       CodeToSend.protocol = SAMSUNG;
       CodeToSend.address = 0x707;
-      CodeToSend.command = 0xD ;
+      CodeToSend.command = 0x2 ;
       CodeToSend.numberOfBits = 32;
       
       sendCode(CodeToSend);
