@@ -43,13 +43,13 @@ void loop(){
     if(i==100){
       if (WiFi.status() != WL_CONNECTED){
         Serial.println("Connection failed");
-      }
-      }
+      }      
       else{
         Serial.println("");
         Serial.println("Connected to WiFi");
         Serial.println(WiFi.localIP());
       }
+    }
   }
   
 
