@@ -9,7 +9,6 @@ int relaisPin = 9;
 String readCode = "";
 IRrecv irrecv(RECV_PIN);
 IRsend irsend(SEND_PIN);
-decode_results results;
 
 void setup()
 {
@@ -22,34 +21,7 @@ void setup()
 
 void loop()
 {
-  irrecv.decode();
- 
-  if (irrecv.decodedIRData.decodedRawData !=0)
-  {
-    
-    //Serial.println(irrecv.decodedIRData.decodedRawData, HEX); // Print the received code in hexadecimal format
-
-    //NEC IR Code
-    if (irrecv.decodedIRData.protocol == SAMSUNG)
-    {
-        printCommand();
-    }
-
-    //using RawData to use for easy matching
-    readCode=(irrecv.decodedIRData.decodedRawData);
-    irrecv.decodedIRData.decodedRawData = 0;
-    delay(1000); // used to eliminate multiple button pushes, might need to adjust if button needs to be held.
-  }
-  if (readCode!="")
-  {
-    analyseCode(readCode);
-  }  
-
-
-
-irrecv.resume(); // Receive the next code
-      delay(100);
-    readCode="";
+  receiveCode();
 }
 
 
@@ -75,6 +47,38 @@ void analyseCode(String code)
     {
     printBlankCode(code);
     }
+}
+
+void receiveCode()
+{
+  irrecv.decode();
+  
+    if (irrecv.decodedIRData.decodedRawData !=0)
+    {
+      
+      //Serial.println(irrecv.decodedIRData.decodedRawData, HEX); // Print the received code in hexadecimal format
+
+      //NEC IR Code
+      if (irrecv.decodedIRData.protocol == SAMSUNG)
+      {
+          printCommand();
+      }
+
+      //using RawData to use for easy matching
+      readCode=(irrecv.decodedIRData.decodedRawData);
+      irrecv.decodedIRData.decodedRawData = 0;
+      delay(1000); // used to eliminate multiple button pushes, might need to adjust if button needs to be held.
+    }
+    if (readCode!="")
+    {
+      analyseCode(readCode);
+    }  
+
+
+
+    irrecv.resume(); // Receive the next code
+        delay(100);
+      readCode="";
 }
 
 void sendCode(IRData data)
