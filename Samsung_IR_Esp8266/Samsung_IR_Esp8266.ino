@@ -1,7 +1,5 @@
 //Wifi Parameters
 #include <ESP8266WiFi.h>
-const char* ssid = "Wifi-SSID"; //add your SSID here
-const char* password = "Wifi-Password"; //add your Wifi Password here
 const int wifiTryLimit = 50; // Limits wait time for Wifi Seconds. Higher Value = longer boottime on a failed connection
 
 // IR Setup
@@ -42,7 +40,7 @@ void loop() {
       Serial.println("Connection failed");
     }
     }
-    if (WL_CONNECTED)
+    if (WiFi.status() == WL_CONNECTED)
     {
       Serial.println("");
       Serial.println("Connected to WiFi");
