@@ -1,3 +1,8 @@
+//Pin Layout
+uint8_t RECV_PIN = D5;
+uint8_t SEND_PIN = D6;
+uint8_t relaisPin = D7;
+
 //Wifi Parameters
 #include <ESP8266WiFi.h>
 const char* ssid = "WifiSSID"; //add your SSID here
@@ -6,119 +11,99 @@ const int wifiTryLimit = 50; // Limits wait time for Wifi Seconds. Higher Value 
 
 // IR Setup
 #include <IRremote.h>
-//Pin Layout
-uint8_t RECV_PIN = D5;
-uint8_t SEND_PIN = D6;
-uint8_t relaisPin = D7;
-
-//IR global
 String readCode = "";
 IRrecv irrecv(RECV_PIN);
 IRsend irsend(SEND_PIN);
 
-void setup() {
+void setup(){
+  pinMode(relaisPin,OUTPUT);
   Serial.begin(115200);
   delay(10);
-  connectToWifi();
-
+  connectToWifi();  
+  digitalWrite(relaisPin,LOW);
+  irrecv.enableIRIn(); // Start the receiver
+  Serial.println("is enabled");
 }
 
-void loop() {
+void loop(){
   receiveCode();
 }
 
-//Regards Wifi Connection
+// Regards Wifi Connection
   void connectToWifi(){
     WiFi.begin(ssid, password);
-    Serial.print("Commecting");
+    Serial.println("Connecting");
     int i=0;
     while (WiFi.status() != WL_CONNECTED && i<wifiTryLimit) {
       i++;
       delay(1000);
       Serial.print(".");
       Serial.println("not yet connected");
-        if(i==100)
-    {
-      Serial.println("Connection failed");
     }
-    }
-    if (WiFi.status() == WL_CONNECTED)
-    {
-      Serial.println("");
-      Serial.println("Connected to WiFi");
-      Serial.println(WiFi.localIP());
-    }
+    if(i==100){
+      if (WiFi.status() != WL_CONNECTED){
+        Serial.println("Connection failed");
+      }
+      }
+      else{
+        Serial.println("");
+        Serial.println("Connected to WiFi");
+        Serial.println(WiFi.localIP());
+      }
   }
+  
 
 
 
 
 
-//Regards IR Signal Handling
+// Regards IR Signal Handling
   void receiveCode(){
     irrecv.decode();
-    
-      if (irrecv.decodedIRData.decodedRawData !=0)
+    if (irrecv.decodedIRData.decodedRawData !=0)
+    {       
+      // Samsung IR Code
+      if (irrecv.decodedIRData.protocol == SAMSUNG)
       {
-        
-        //Serial.println(irrecv.decodedIRData.decodedRawData, HEX); // Print the received code in hexadecimal format
-
-        //NEC IR Code
-        if (irrecv.decodedIRData.protocol == SAMSUNG)
-        {
-            printCommand();
-        }
-
-        //using RawData to use for easy matching
-        readCode=(irrecv.decodedIRData.decodedRawData);
-        irrecv.decodedIRData.decodedRawData = 0;
-        delay(1000); // used to eliminate multiple button pushes, might need to adjust if button needs to be held.
+        printCommand();
       }
-      if (readCode!="")
-      {
-        analyseCode(readCode);
-      }  
-
-
-
-      irrecv.resume(); // Receive the next code
-          delay(100);
-        readCode="";
+      // Getting RawData to use for easy matching
+      readCode=(irrecv.decodedIRData.decodedRawData);
+      Serial.println("RawCode:" + readCode);
+      irrecv.decodedIRData.decodedRawData = 0;
+      delay(1000); // Used to eliminate multiple button pushes, might need adjustment if button needs to be held.
+    }
+    if (readCode!=""){
+      analyseCode(readCode);
+    }  
+    irrecv.resume(); // Receive the next code
+    delay(100);
+    readCode="";
   }
 
-  void sendCode(IRData data){
-    irsend.sendSamsung(data.address, data.command, 1);
-  }
-
-
-  //matches RawCode
+  // Matches RawCode
   void analyseCode(String code){
     if (code=="2473330439") // red button
       { 
-          Serial.println("turnonpc");
-          turnOnPc();
+        turnOnPc();
       }
     else if(code =="3910534919") // blue button
       {
-        IRData CodeToSend; // simulates power button push
-        CodeToSend.protocol = SAMSUNG;
-        CodeToSend.address = 0x707;
-        CodeToSend.command = 0xD ;
-        CodeToSend.numberOfBits = 32;
-        
-        sendCode(CodeToSend);
+        turnOnTV();
       }
       else
       {
-      printBlankCode(code);
+        printBlankCode(code);
       }
   }
 
+  void sendCode(IRData data){
+    irsend.sendSamsung(data.address, data.command, 1); //Samsung Code Only here
+  }
 
-
-  //used to print commands
   void printCommand(){
-    irrecv.printIRResultShort(&Serial);
+    irrecv.printIRResultShort(&Serial); // This will get you the Commands if you want to analyse and copy a IR Signal
+
   }
 
   void printBlankCode (String Code){
@@ -130,12 +115,20 @@ void loop() {
 
 
 // Example UseCases
-  void turnOnPc(){ // Function to start by button push
-  
+  void turnOnPc(){ //simulates button push
+    Serial.println("Turning on PC");
     digitalWrite(relaisPin, HIGH);
-      delay(500);
-      digitalWrite(relaisPin, LOW);
-}
+    delay(500);
+    digitalWrite(relaisPin, LOW);
+  }
 
-
-
+  void turnOnTV(){ //simulates power button push on remote
+      Serial.println("Turning on the TV");
+      IRData CodeToSend;
+      CodeToSend.protocol = SAMSUNG;
+      CodeToSend.address = 0x707;
+      CodeToSend.command = 0xD ;
+      CodeToSend.numberOfBits = 32;
+      
+      sendCode(CodeToSend);
+  }
