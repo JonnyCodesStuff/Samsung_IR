@@ -1,5 +1,7 @@
 //Wifi Parameters
 #include <ESP8266WiFi.h>
+const char* ssid = "WifiSSID"; //add your SSID here
+const char* password = "WifiPW"; //add your Wifi Password here
 const int wifiTryLimit = 50; // Limits wait time for Wifi Seconds. Higher Value = longer boottime on a failed connection
 
 // IR Setup
