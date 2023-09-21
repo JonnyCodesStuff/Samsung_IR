@@ -28,6 +28,8 @@ void setup(){
   Serial.println("is enabled");
 }
 
+
+// Ensure Continuos Cecks for ir-receivage
 void loop(){
   receiveCode();
 }
@@ -83,7 +85,7 @@ void loop(){
     readCode="";
   }
 
-  // Matches RawCode
+  // Matches received RawCode
   void analyseCode(String code){
     if (code=="2473330439") // red button
       { 
@@ -108,6 +110,7 @@ void loop(){
 
   }
 
+//Display of unregistered/uncovered IR codes
   void printBlankCode (String Code){
     Serial.println("no match found: Add this to analyseCode():");
     Serial.println("else if(code ==\"" + String(Code) + "\"){");
@@ -124,7 +127,8 @@ void loop(){
     digitalWrite(relaisPin, LOW);
   }
 
-  void turnOnTV(){ //simulates power button push on remote
+//simulates power button push on remote
+  void turnOnTV(){ 
       Serial.println("Turning on the TV");
       IRData CodeToSend;
       CodeToSend.protocol = SAMSUNG;
