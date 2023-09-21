@@ -1,7 +1,7 @@
 //Pin Layout
-uint8_t RECV_PIN = D5;
-uint8_t SEND_PIN = D6;
-uint8_t relaisPin = D7;
+uint8_t RECV_PIN = D5; // Connected to IR Receiver
+uint8_t SEND_PIN = D6; // Connected to IR LED
+uint8_t relaisPin = D7; //Used in Example
 
 //Wifi Parameters
 #include <ESP8266WiFi.h>
@@ -15,6 +15,16 @@ String readCode = "";
 IRrecv irrecv(RECV_PIN);
 IRsend irsend(SEND_PIN);
 
+// MQTT Setup
+#include <PubSubClient.h>
+const char* mqttServer = "MQTTBrokerIP";
+const int mqttPort = 1883;
+const char* mqttUser = "YourMqttUsername";
+const char* mqttPassword = "YourMqttPassword";
+const char* mqttTopic = "topic code";
+WiFiClient espClient;
+PubSubClient client(espClient);
+
 void setup(){
   pinMode(LED_BUILTIN, OUTPUT); // used to indicate if IR is enabled
   digitalWrite(LED_BUILTIN, HIGH);
@@ -23,12 +33,29 @@ void setup(){
   Serial.begin(115200);
 
   connectToWifi();  
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    //enables MQTT if WifiConnected
+        client.setServer(mqttServer, mqttPort);
+    client.setCallback(callback);
+
+    if (client.connect("IrTv", mqttUser, mqttPassword)) {
+      Serial.println("Connected to MQTT broker");
+      client.subscribe("homeassistant/IRSender");
+    } else {
+      Serial.println("Connection to MQTT broker failed");
+    }
+  }
   irrecv.enableIRIn(); // Start the IR receiver
   digitalWrite(LED_BUILTIN, LOW);  
   Serial.println("is enabled");
 }
-
+//Continously checks for IR-Signals
 void loop(){
+  if (client.connected())
+  {
+    client.loop();
+  }
   receiveCode();
 }
 
@@ -55,8 +82,21 @@ void loop(){
   }
   
 
+//Regards MQTT
+  void callback(char* topic, byte*payload,unsigned int length){
+    if (strcmp(topic, mqttTopic) ==0){
+      String mqttCode = "";
+      for(unsigned int j=0; j<length; j++)
+      {
+        mqttCode += (char)payload[j];
+      }
+      if (mqttCode != "")
+      {
+        analyseCode(mqttCode);
 
-
+      }
+    }
+  }
 
 
 // Regards IR Signal Handling
@@ -83,7 +123,7 @@ void loop(){
     readCode="";
   }
 
-  // Matches RawCode
+  // Matches received RawCode
   void analyseCode(String code){
     if (code=="2473330439") // red button
       { 
@@ -107,7 +147,7 @@ void loop(){
     irrecv.printIRResultShort(&Serial); // This will get you the Commands if you want to analyse and copy a IR Signal
 
   }
-
+  //prints predone Code for uregistered/ not used IR Codes
   void printBlankCode (String Code){
     Serial.println("no match found: Add this to analyseCode():");
     Serial.println("else if(code ==\"" + String(Code) + "\"){");
@@ -117,14 +157,16 @@ void loop(){
 
 
 // Example UseCases
-  void turnOnPc(){ //simulates button push
+  void turnOnPc(){ 
+    //simulates button push with a relais
     Serial.println("Turning on PC");
     digitalWrite(relaisPin, HIGH);
     delay(500);
     digitalWrite(relaisPin, LOW);
   }
 
-  void turnOnTV(){ //simulates power button push on remote
+  void turnOnTV(){ 
+    //simulates power button push on remote
       Serial.println("Turning on the TV");
       IRData CodeToSend;
       CodeToSend.protocol = SAMSUNG;

@@ -1,7 +1,8 @@
 //Pin Layout
-int RECV_PIN = A2; // Pin to which IR receiver is connected
-int SEND_PIN = A3;
-int relaisPin = 9;
+int RECV_PIN = A2; // Connected to IR Receiver
+int SEND_PIN = A3; //Connected to IR LED
+int relaisPin = 9; //Used in Example
+
 
 // IR Setup
 #include <IRremote.h>
@@ -21,6 +22,7 @@ void setup(){
   Serial.println("is enabled");
 }
 
+//Continously checks for IR-Signals
 void loop(){
   receiveCode();
 }
@@ -49,7 +51,7 @@ void loop(){
     readCode="";
   }
 
-  // Matches RawCode
+  // Matches received RawCode
   void analyseCode(String code){
     if (code=="2473330439") // red button
     {
@@ -74,6 +76,7 @@ void loop(){
 
   }
 
+  //prints predone Code for uregistered/ not used IR Codes
   void printBlankCode (String Code){
     Serial.println("no match found: Add this to analyseCode():");
     Serial.println("else if(code ==\"" + String(Code) + "\"){");
@@ -83,14 +86,16 @@ void loop(){
 
 
 // Example UseCases
-  void turnOnPc(){ //simulates button push
+  void turnOnPc(){ 
+    //simulates button push with a relais
     Serial.println("Turning on PC");
     digitalWrite(relaisPin, HIGH);
     delay(500);
     digitalWrite(relaisPin, LOW);
   }
 
-  void turnOnTV(){ //simulates power button push on remote
+  void turnOnTV(){ 
+    //simulates power button push on remote
     Serial.println("Turning on the TV");
     IRData CodeToSend; 
     CodeToSend.protocol = SAMSUNG;
